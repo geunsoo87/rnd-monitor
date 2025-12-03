@@ -43,6 +43,10 @@ config.json
 *_backup_*.xlsx
 __pycache__/
 
+# 배포 파일 (Git에는 포함하되 공유 폴더에는 포함)
+# 사용법.txt
+# 공유폴더_배포가이드.txt
+
 # OS
 .DS_Store
 Thumbs.db

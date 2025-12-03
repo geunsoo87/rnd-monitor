@@ -11,46 +11,40 @@
 - ✅ **엑셀 기반 저장**: 모든 데이터를 master.xlsx 파일로 저장
 - ✅ **다중 과제 관리**: 각 과제별로 독립적인 파일 관리
 
-## 설치 방법
+## 설치 및 실행
 
-### 1. Python 설치
-Python 3.10 이상이 필요합니다.
+### 방법 1: 포터블 버전 (Python 설치 불필요) - 권장
 
-### 2. 패키지 설치
+1. **Python Portable 다운로드**
+   - https://www.python.org/downloads/windows/
+   - "Windows embeddable package" 다운로드 (Python 3.11 이상)
+   - 예: `python-3.11.9-embed-amd64.zip`
 
-#### 일반 Python 환경
-```bash
-pip install -r requirements.txt
-```
-
-#### Anaconda 환경
-```bash
-conda install streamlit pandas openpyxl plotly
-# 또는
-pip install -r requirements.txt
-```
-
-### 3. 프로그램 실행
-
-#### 일반 Python 환경
-```bash
-streamlit run app.py
-# 또는
-python -m streamlit run app.py
-```
-
-#### Anaconda 환경
-1. **Anaconda Prompt**를 실행합니다
-2. 프로젝트 폴더로 이동:
-   ```bash
-   cd C:\Users\geuns\PythonCode\rnd_monitor
+2. **압축 해제 및 배치**
+   - 다운로드한 zip 파일을 압축 해제
+   - 압축 해제한 폴더를 프로젝트 폴더 안에 `python` 폴더로 이름 변경
    ```
-3. 프로그램 실행:
-   ```bash
-   streamlit run app.py
+   연구비관리시스템/
+   ├── python/          ← Python Portable 폴더
+   ├── app.py
+   ├── ... (모든 파일)
+   └── 실행.bat
    ```
 
-브라우저가 자동으로 열리며 프로그램이 실행됩니다.
+3. **실행**
+   - `실행.bat` 파일을 더블클릭
+   - 처음 실행 시 패키지가 자동으로 설치됩니다
+
+### 방법 2: 일반 버전 (Python 설치 필요)
+
+1. **Python 설치**
+   - Python 3.10 이상 설치 필요
+   - https://www.python.org/downloads/
+   - 설치 시 "Add Python to PATH" 체크
+
+2. **실행**
+   - `실행.bat` 파일을 더블클릭
+   - 처음 실행 시 패키지가 자동으로 설치됩니다
 
 ## 사용 방법
 
@@ -59,50 +53,37 @@ python -m streamlit run app.py
 1. 프로그램을 실행하면 **작업 파일 선택** 화면이 표시됩니다.
 2. 다음 중 하나를 선택합니다:
    - **기존 파일 열기**: 이미 있는 master.xlsx 파일을 선택
-   - **폴더 선택**: 작업 폴더를 선택하면 해당 폴더의 master.xlsx를 사용 (없으면 생성)
-   - **새 프로젝트**: 새 폴더를 선택하고 master.xlsx를 생성
+   - **폴더 선택**: 작업 폴더를 선택하면 해당 폴더의 master.xlsx를 사용 (없으면 자동 생성)
 
 ### 지출내역 입력
 
 1. **지출내역 관리** 메뉴로 이동
-2. **새 행 추가** 버튼 클릭
-3. 필수 정보 입력:
-   - 통계목명 (필수)
-   - 사용일자 (필수)
-   - 지출결의명 (필수)
-   - 지출결의액 (필수)
-   - 상세내역 (선택)
-   - RCMS 항목 (선택)
-4. **추가** 버튼 클릭
-5. **저장** 버튼으로 데이터 저장
+2. 표에서 직접 데이터를 입력/수정할 수 있습니다
+3. **💾 반영저장** 버튼을 클릭하여 저장
 
 ### 예산 설정
 
-#### ERP 예산 설정
-1. **ERP 예산** 메뉴로 이동
-2. **예산 수정** 버튼 클릭
-3. 각 통계목별로 실행예산 입력
-4. **저장** 버튼 클릭
-
-#### RCMS 예산 설정
-1. **RCMS 예산** 메뉴로 이동
-2. **예산 수정** 버튼 클릭
-3. 각 RCMS 세부항목별로 예산 입력
-4. **저장** 버튼 클릭
-
-### 예산 집계
-
-1. **ERP 예산** 또는 **RCMS 예산** 메뉴로 이동
-2. **집계 실행** 버튼 클릭
-3. 집행액, 잔액, 집행률이 자동으로 계산됩니다.
+1. **집행 결과** 메뉴로 이동
+2. ERP 예산 또는 RCMS 예산에서 예산 금액을 직접 수정
+3. 자동으로 집계가 실행됩니다
 
 ## 파일 구조
 
 ```
 프로젝트 폴더/
-├── master.xlsx              # 핵심 데이터 파일
-├── master_backup_*.xlsx     # 자동 백업 파일들
-└── export/                  # 보고용 출력 파일 (선택)
+├── app.py                  # 메인 애플리케이션
+├── config.py               # 설정 관리
+├── data_manager.py         # 데이터 로드/저장
+├── expense_manager.py       # 지출내역 관리
+├── budget_calculator.py     # 예산 집계 계산
+├── initial_data.py          # 초기 데이터
+├── ui_components.py         # UI 컴포넌트
+├── validators.py            # 데이터 검증
+├── utils.py                 # 유틸리티
+├── folder_dialog.py         # 폴더 선택
+├── requirements.txt         # 패키지 의존성
+├── 실행.bat                 # 실행 스크립트
+└── README.md                # 사용 설명서
 ```
 
 ### master.xlsx 시트 구성
@@ -112,66 +93,49 @@ python -m streamlit run app.py
 - **RCMS_BUDGET**: RCMS 기준 예산 및 집계 결과
 - **MAPPING_ERP_RCMS**: ERP-RCMS 매핑 정보
 
-## 프로젝트 구조
+## 배포 방법
 
-```
-rnd_monitor/
-├── app.py                  # Streamlit 메인 애플리케이션
-├── config.py               # 설정 관리 모듈
-├── data_manager.py         # 데이터 로드/저장 관리
-├── expense_manager.py      # 지출내역 관리 로직
-├── budget_calculator.py    # 예산 집계 계산 로직
-├── initial_data.py         # 초기 데이터 생성 모듈
-├── ui_components.py         # 재사용 가능한 UI 컴포넌트
-├── validators.py           # 데이터 검증 로직
-├── utils.py                # 유틸리티 함수
-├── requirements.txt        # 패키지 의존성
-└── README.md               # 사용자 가이드
-```
+### 공유 폴더 배포
+
+1. **필요한 파일 복사**
+   - 모든 `.py` 파일
+   - `requirements.txt`
+   - `실행.bat`
+   - `README.md`
+   - (선택) `python` 폴더 (포터블 버전인 경우)
+
+2. **공유 폴더에 업로드**
+
+3. **사용자 안내**
+   ```
+   공유 폴더에서 프로그램을 다운로드하고,
+   '실행.bat' 파일을 더블클릭하세요.
+   처음 실행 시 패키지가 자동으로 설치됩니다.
+   ```
 
 ## 주요 특징
 
 ### ERP 통계목 (14개)
-- 총액, 기타직보수, 상용임금, 일반수용비, 임차료, 유류비, 재료비, 국내여비, 국외업무여비, 사업추진비, 자산취득비, 무형자산, 일반관리비, 고용부담금
+총액, 기타직보수, 상용임금, 일반수용비, 임차료, 유류비, 재료비, 국내여비, 국외업무여비, 사업추진비, 자산취득비, 무형자산, 일반관리비, 고용부담금
 
 ### RCMS 세부항목 (23개)
-- 인건비 (2개), 연구시설장비비 (4개), 연구재료비 (3개), 연구활동비 (12개), 연구수당 (1개), 간접비 (1개)
+인건비 (2개), 연구시설장비비 (4개), 연구재료비 (3개), 연구활동비 (12개), 연구수당 (1개), 간접비 (1개)
 
 ## 문제 해결
 
-### 파일이 열리지 않을 때
-- 파일 경로에 한글이 포함되어 있는지 확인
-- 파일이 다른 프로그램에서 열려있는지 확인
-- 파일 권한을 확인
+### Python이 설치되어 있지 않습니다
+- Python 3.10 이상을 설치하거나
+- 포터블 버전을 사용하세요 (Python Portable을 `python` 폴더에 설치)
 
-### 데이터가 저장되지 않을 때
-- 파일 쓰기 권한 확인
-- 디스크 공간 확인
-- 백업 파일이 생성되는지 확인
+### 패키지 설치 실패
+- 인터넷 연결 확인
+- 관리자 권한으로 실행
+- `python -m pip install --upgrade pip` 실행 후 재시도
 
-## 배포
-
-### Streamlit Cloud 배포
-
-이 프로젝트를 Streamlit Cloud에 배포하여 웹에서 사용할 수 있습니다.
-
-**배포 가이드**: [DEPLOYMENT.md](DEPLOYMENT.md) 파일을 참조하세요.
-
-**주요 단계**:
-1. GitHub에 저장소 생성 및 코드 업로드
-2. Streamlit Cloud (https://share.streamlit.io)에서 앱 배포
-3. 자동 배포 완료
-
-**주의사항**:
-- Streamlit Cloud에서는 로컬 폴더 선택 다이얼로그가 작동하지 않습니다
-- 파일 업로드 기능을 사용하여 데이터를 관리하세요
-- 세션 종료 시 데이터가 초기화될 수 있으므로, 중요한 데이터는 다운로드하여 보관하세요
+### 프로그램이 실행되지 않음
+- `실행.bat`를 관리자 권한으로 실행
+- 방화벽 경고가 나오면 "허용" 선택
 
 ## 라이선스
 
 이 프로젝트는 개인 사용 목적으로 개발되었습니다.
-
-## 문의
-
-문제가 발생하거나 개선 사항이 있으면 이슈를 등록해주세요.
-

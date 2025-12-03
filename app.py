@@ -16,12 +16,12 @@ from ui_components import (
     display_file_info, display_expense_table, display_erp_budget_table,
     display_rcms_budget_table, plot_erp_budget_chart, plot_rcms_budget_chart, show_summary_cards
 )
-# folder_dialog는 tkinter가 필요하므로 조건부 import
+# Streamlit Cloud에서는 tkinter 사용 불가
 try:
     from folder_dialog import select_folder
-    FOLDER_DIALOG_AVAILABLE = True
+    HAS_FOLDER_DIALOG = True
 except ImportError:
-    FOLDER_DIALOG_AVAILABLE = False
+    HAS_FOLDER_DIALOG = False
     select_folder = None
 
 # 페이지 설정
@@ -143,23 +143,6 @@ def show_file_select_page():
     
     st.header("작업 파일 선택")
     
-    # 최근 사용한 폴더
-    last_folder = config_manager.get("last_work_folder", "")
-    if last_folder:
-        st.subheader("최근 사용한 폴더")
-        if st.button(f"📁 {last_folder}", key="last_folder_btn"):
-            # 기존 master.xlsx가 있으면 사용, 없으면 폴더명 기반 파일명 사용
-            master_file = get_master_filename(last_folder)
-            file_path = get_file_path(last_folder, master_file)
-            # 기존 master.xlsx도 확인
-            if not file_path.exists():
-                old_master = get_file_path(last_folder, "master.xlsx")
-                if old_master.exists():
-                    file_path = old_master
-            if load_data(str(file_path)):
-                st.session_state.page = 'main'
-                st.rerun()
-    
     st.markdown("---")
     
     # 파일 선택 옵션
@@ -180,53 +163,15 @@ def show_file_select_page():
                 st.rerun()
     
     with col2:
-        st.subheader("폴더 선택")
-        st.write("작업 폴더를 선택하면 해당 폴더의 master.xlsx를 사용합니다. (파일이 없으면 자동 생성)")
-        
-        # 세션 상태 초기화 (한 번만, 위젯 생성 전)
-        if 'folder_input' not in st.session_state:
-            st.session_state.folder_input = config_manager.get("last_work_folder", "")
-        
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            # Streamlit Cloud에서는 tkinter가 작동하지 않으므로 조건부로 표시
-            if FOLDER_DIALOG_AVAILABLE and select_folder:
-                if st.button("📁 폴더 찾아보기", key="browse_folder_btn"):
-                    try:
-                        selected = select_folder(config_manager.get("last_work_folder", ""))
-                        if selected:
-                            # 세션 상태 업데이트 (위젯 생성 전)
-                            st.session_state.folder_input = selected
-                            st.rerun()
-                    except Exception:
-                        st.caption("💡 **참고**: 이 환경에서는 폴더 찾아보기 기능을 사용할 수 없습니다.")
-            else:
-                st.caption("💡 **참고**: Streamlit Cloud 환경에서는 폴더 찾아보기 기능을 사용할 수 없습니다. 폴더 경로를 직접 입력하거나 파일 업로드를 사용하세요.")
-        
-        # 폴더 경로 입력 (세션 상태와 동기화)
-        folder_path = st.text_input("폴더 경로", key="folder_input", value=st.session_state.folder_input)
-        
-        with col_btn2:
-            if st.button("폴더에서 열기", key="folder_open_btn"):
-                # 위젯에서 가져온 값 사용
-                folder = folder_path.strip() if folder_path else ""
-                
-                if folder:
-                    # 폴더가 없으면 생성
-                    ensure_folder_exists(folder)
-                    # 폴더명 기반 파일명 생성
-                    master_file = get_master_filename(folder)
-                    file_path = get_file_path(folder, master_file)
-                    # 기존 master.xlsx가 있으면 사용 (호환성)
-                    old_master = get_file_path(folder, "master.xlsx")
-                    if old_master.exists() and not file_path.exists():
-                        file_path = old_master
-                    # 파일이 없으면 자동 생성 (load_data 내부에서 처리)
-                    if load_data(str(file_path)):
-                        st.session_state.page = 'main'
-                        st.rerun()
-                else:
-                    st.error("폴더 경로를 입력하거나 선택해주세요.")
+        st.subheader("새 파일로 시작")
+        st.write("새로운 master.xlsx 파일을 생성하여 시작합니다.")
+        if st.button("📄 새 파일 생성", key="new_file_btn", type="primary"):
+            # 임시 파일 경로 사용 (Streamlit Cloud 호환)
+            temp_path = Path("temp") / "master.xlsx"
+            ensure_folder_exists("temp")
+            if load_data(str(temp_path)):
+                st.session_state.page = 'main'
+                st.rerun()
 
 
 def show_main_page():
@@ -247,8 +192,10 @@ def show_main_page():
                 st.session_state.page = 'file_select'
                 st.rerun()
         with col3:
-            if st.button("📂 폴더 열기", key="open_folder_btn"):
-                open_folder_in_explorer(str(folder_path))
+            # Streamlit Cloud에서는 폴더 열기 불가
+            if HAS_FOLDER_DIALOG:
+                if st.button("📂 폴더 열기", key="open_folder_btn"):
+                    open_folder_in_explorer(str(folder_path))
     
     st.markdown("---")
     
@@ -568,6 +515,17 @@ def show_expense_page():
                 if 'edited_expense_df' in st.session_state:
                     del st.session_state.edited_expense_df
                 st.success("✅ 지출내역이 저장되었고, ERP/RCMS 예산이 자동으로 집계되었습니다!")
+                
+                # 파일 다운로드 버튼 추가
+                with open(st.session_state.data_manager.file_path, "rb") as f:
+                    file_bytes = f.read()
+                    st.download_button(
+                        label="📥 파일 다운로드",
+                        data=file_bytes,
+                        file_name=st.session_state.data_manager.file_path.name,
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        key="download_expense_btn"
+                    )
                 st.rerun()
             else:
                 st.error(f"저장에 실패했습니다: {error_msg}")
@@ -649,6 +607,16 @@ def show_erp_budget_page():
                 success, error_msg = st.session_state.data_manager.save_all(data)
                 if success:
                     st.success("✅ 예산이 저장되었습니다!")
+                    # 파일 다운로드 버튼 추가
+                    with open(st.session_state.data_manager.file_path, "rb") as f:
+                        file_bytes = f.read()
+                        st.download_button(
+                            label="📥 파일 다운로드",
+                            data=file_bytes,
+                            file_name=st.session_state.data_manager.file_path.name,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="download_erp_btn"
+                        )
                     st.rerun()
                 else:
                     st.error(f"저장 실패: {error_msg}")
@@ -837,6 +805,16 @@ def show_execution_result_page():
                 success, error_msg = st.session_state.data_manager.save_all(data)
                 if success:
                     st.success("✅ 예산이 저장되었습니다!")
+                    # 파일 다운로드 버튼 추가
+                    with open(st.session_state.data_manager.file_path, "rb") as f:
+                        file_bytes = f.read()
+                        st.download_button(
+                            label="📥 파일 다운로드",
+                            data=file_bytes,
+                            file_name=st.session_state.data_manager.file_path.name,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="download_erp_btn"
+                        )
                     st.rerun()
                 else:
                     st.error(f"저장 실패: {error_msg}")
@@ -909,6 +887,16 @@ def show_execution_result_page():
                 success, error_msg = st.session_state.data_manager.save_all(data)
                 if success:
                     st.success("✅ 예산이 저장되었습니다!")
+                    # 파일 다운로드 버튼 추가
+                    with open(st.session_state.data_manager.file_path, "rb") as f:
+                        file_bytes = f.read()
+                        st.download_button(
+                            label="📥 파일 다운로드",
+                            data=file_bytes,
+                            file_name=st.session_state.data_manager.file_path.name,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="download_erp_btn"
+                        )
                     st.rerun()
                 else:
                     st.error(f"저장 실패: {error_msg}")
