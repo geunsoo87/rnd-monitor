@@ -16,7 +16,13 @@ from ui_components import (
     display_file_info, display_expense_table, display_erp_budget_table,
     display_rcms_budget_table, plot_erp_budget_chart, plot_rcms_budget_chart, show_summary_cards
 )
-from folder_dialog import select_folder
+# folder_dialog는 tkinter가 필요하므로 조건부 import
+try:
+    from folder_dialog import select_folder
+    FOLDER_DIALOG_AVAILABLE = True
+except ImportError:
+    FOLDER_DIALOG_AVAILABLE = False
+    select_folder = None
 
 # 페이지 설정
 st.set_page_config(
@@ -184,15 +190,17 @@ def show_file_select_page():
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             # Streamlit Cloud에서는 tkinter가 작동하지 않으므로 조건부로 표시
-            try:
+            if FOLDER_DIALOG_AVAILABLE and select_folder:
                 if st.button("📁 폴더 찾아보기", key="browse_folder_btn"):
-                    selected = select_folder(config_manager.get("last_work_folder", ""))
-                    if selected:
-                        # 세션 상태 업데이트 (위젯 생성 전)
-                        st.session_state.folder_input = selected
-                        st.rerun()
-            except Exception as e:
-                # Streamlit Cloud 환경에서는 폴더 찾아보기 버튼 숨김
+                    try:
+                        selected = select_folder(config_manager.get("last_work_folder", ""))
+                        if selected:
+                            # 세션 상태 업데이트 (위젯 생성 전)
+                            st.session_state.folder_input = selected
+                            st.rerun()
+                    except Exception:
+                        st.caption("💡 **참고**: 이 환경에서는 폴더 찾아보기 기능을 사용할 수 없습니다.")
+            else:
                 st.caption("💡 **참고**: Streamlit Cloud 환경에서는 폴더 찾아보기 기능을 사용할 수 없습니다. 폴더 경로를 직접 입력하거나 파일 업로드를 사용하세요.")
         
         # 폴더 경로 입력 (세션 상태와 동기화)
