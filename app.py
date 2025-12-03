@@ -184,7 +184,7 @@ def show_main_page():
         file_path = Path(st.session_state.current_file_path)
         folder_path = file_path.parent
         
-        col1, col2, col3 = st.columns([3, 1, 1])
+        col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
         with col1:
             display_file_info(str(file_path), str(folder_path))
         with col2:
@@ -192,6 +192,23 @@ def show_main_page():
                 st.session_state.page = 'file_select'
                 st.rerun()
         with col3:
+            # 파일 다시 업로드 기능
+            uploaded_file = st.file_uploader(
+                "📤 파일 다시 업로드", 
+                type=['xlsx'], 
+                key="reupload_file",
+                help="저장된 파일을 다운로드한 후 수정하여 다시 업로드하세요"
+            )
+            if uploaded_file is not None:
+                # 임시 파일로 저장 후 로드
+                temp_path = Path("temp") / uploaded_file.name
+                ensure_folder_exists("temp")
+                with open(temp_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                if load_data(str(temp_path)):
+                    st.success("✅ 파일이 다시 로드되었습니다!")
+                    st.rerun()
+        with col4:
             # Streamlit Cloud에서는 폴더 열기 불가
             if HAS_FOLDER_DIALOG:
                 if st.button("📂 폴더 열기", key="open_folder_btn"):
@@ -517,15 +534,19 @@ def show_expense_page():
                 st.success("✅ 지출내역이 저장되었고, ERP/RCMS 예산이 자동으로 집계되었습니다!")
                 
                 # 파일 다운로드 버튼 추가
-                with open(st.session_state.data_manager.file_path, "rb") as f:
-                    file_bytes = f.read()
-                    st.download_button(
-                        label="📥 파일 다운로드",
-                        data=file_bytes,
-                        file_name=st.session_state.data_manager.file_path.name,
-                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                        key="download_expense_btn"
-                    )
+                col_download1, col_download2 = st.columns([1, 1])
+                with col_download1:
+                    with open(st.session_state.data_manager.file_path, "rb") as f:
+                        file_bytes = f.read()
+                        st.download_button(
+                            label="📥 파일 다운로드",
+                            data=file_bytes,
+                            file_name=st.session_state.data_manager.file_path.name,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="download_expense_btn"
+                        )
+                with col_download2:
+                    st.info("💡 다운로드한 파일을 수정한 후, 상단의 '파일 다시 업로드'로 업로드하여 계속 작업하세요.")
                 st.rerun()
             else:
                 st.error(f"저장에 실패했습니다: {error_msg}")
@@ -888,15 +909,19 @@ def show_execution_result_page():
                 if success:
                     st.success("✅ 예산이 저장되었습니다!")
                     # 파일 다운로드 버튼 추가
-                    with open(st.session_state.data_manager.file_path, "rb") as f:
-                        file_bytes = f.read()
-                        st.download_button(
-                            label="📥 파일 다운로드",
-                            data=file_bytes,
-                            file_name=st.session_state.data_manager.file_path.name,
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            key="download_erp_btn"
-                        )
+                    col_download1, col_download2 = st.columns([1, 1])
+                    with col_download1:
+                        with open(st.session_state.data_manager.file_path, "rb") as f:
+                            file_bytes = f.read()
+                            st.download_button(
+                                label="📥 파일 다운로드",
+                                data=file_bytes,
+                                file_name=st.session_state.data_manager.file_path.name,
+                                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                key="download_rcms_btn"
+                            )
+                    with col_download2:
+                        st.info("💡 다운로드한 파일을 수정한 후, 상단의 '파일 다시 업로드'로 업로드하여 계속 작업하세요.")
                     st.rerun()
                 else:
                     st.error(f"저장 실패: {error_msg}")
