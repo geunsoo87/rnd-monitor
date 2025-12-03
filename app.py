@@ -1000,7 +1000,40 @@ def show_execution_result_page():
     # RCMS 집행률 차트
     st.markdown("#### RCMS 항목별 집행률")
     plot_rcms_budget_chart(st.session_state.rcms_budget_df)
-        
+    
+    # 저장 버튼 (예산 수정 모드가 아닐 때만 표시)
+    if not st.session_state.get('edit_erp_budget', False) and not st.session_state.get('edit_rcms_budget', False):
+        st.markdown("---")
+        st.subheader("💾 저장")
+        if st.button("💾 모든 데이터 저장", key="save_all_btn", type="primary", use_container_width=True):
+            # 모든 데이터 저장
+            data = {
+                'EXPENSE': st.session_state.expense_manager.get_all() if st.session_state.expense_manager else pd.DataFrame(),
+                'ERP_BUDGET': st.session_state.erp_budget_df,
+                'RCMS_BUDGET': st.session_state.rcms_budget_df,
+                'MAPPING_ERP_RCMS': st.session_state.mapping_df
+            }
+            success, error_msg = st.session_state.data_manager.save_all(data)
+            if success:
+                st.success("✅ 모든 데이터가 저장되었습니다!")
+                # 파일 다운로드 버튼 추가
+                col_download1, col_download2 = st.columns([1, 1])
+                with col_download1:
+                    with open(st.session_state.data_manager.file_path, "rb") as f:
+                        file_bytes = f.read()
+                        st.download_button(
+                            label="📥 파일 다운로드",
+                            data=file_bytes,
+                            file_name=st.session_state.data_manager.file_path.name,
+                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            key="download_all_btn"
+                        )
+                with col_download2:
+                    st.info("💡 다운로드한 파일을 수정한 후, 상단의 '파일 다시 업로드'로 업로드하여 계속 작업하세요.")
+                st.rerun()
+            else:
+                st.error(f"저장에 실패했습니다: {error_msg}")
+
 
 
 
