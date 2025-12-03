@@ -59,9 +59,10 @@ class BudgetCalculator:
         result_df.loc[mask, '집행률'] = (result_df.loc[mask, '집행액'] / result_df.loc[mask, '실행예산']) * 100
         result_df.loc[~mask & (result_df['통계목명'] != '총액'), '집행률'] = 0.0
         
-        # updated_at 업데이트
+        # updated_at 업데이트 (모든 행에 동일한 시간 설정)
         from datetime import datetime
-        result_df['updated_at'] = datetime.now()
+        update_time = datetime.now()
+        result_df['updated_at'] = update_time
         
         return result_df
     

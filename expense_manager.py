@@ -120,10 +120,12 @@ class ExpenseManager:
         
         # 지출결의명 검색
         if '지출결의명' in filters and filters['지출결의명']:
-            keyword = filters['지출결의명'].lower()
-            filtered_df = filtered_df[
-                filtered_df['지출결의명'].str.lower().str.contains(keyword, na=False)
-            ]
+            keyword = str(filters['지출결의명']).strip().lower()
+            if keyword:
+                # 문자열 타입으로 변환 후 검색 (정규식 사용 안 함)
+                filtered_df = filtered_df[
+                    filtered_df['지출결의명'].astype(str).str.lower().str.contains(keyword, na=False, regex=False)
+                ]
         
         # RCMS 정산 상태 필터
         if 'rcms_settled' in filters and filters['rcms_settled'] is not None:

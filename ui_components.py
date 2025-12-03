@@ -48,6 +48,26 @@ def display_erp_budget_table(df: pd.DataFrame, editable: bool = False):
     
     display_df = df.copy()
     
+    # updated_at 컬럼 제외 (표에 표시하지 않음)
+    if 'updated_at' in display_df.columns:
+        # 업데이트 시간 추출 (첫 번째 행의 시간 사용, 모든 행이 같은 시간이어야 함)
+        update_time = None
+        if not display_df['updated_at'].empty:
+            first_time = display_df['updated_at'].iloc[0]
+            if pd.notna(first_time):
+                from datetime import datetime
+                if isinstance(first_time, datetime):
+                    update_time = first_time.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    update_time = str(first_time)
+        
+        # updated_at 컬럼 제거
+        display_df = display_df.drop(columns=['updated_at'])
+        
+        # 업데이트 시간 표시 (테이블 위에 하나만)
+        if update_time:
+            st.caption(f"📅 마지막 업데이트: {update_time}")
+    
     # 금액 포맷팅
     for col in ['실행예산', '집행액', '잔액']:
         if col in display_df.columns:
